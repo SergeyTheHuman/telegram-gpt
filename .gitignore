@@ -1,0 +1,6 @@
+node_modules
+.vscode
+.idea
+.DS_store
+config/default.json
+config/production.json
