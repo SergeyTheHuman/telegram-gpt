@@ -1,5 +1,5 @@
 import config from 'config'
-import { Telegraf, session } from 'telegraf'
+import { Markup, Telegraf, session } from 'telegraf'
 import { message } from 'telegraf/filters'
 import { code } from 'telegraf/format'
 import { CHAT_GPT_ROLES, INITIAL_SESSION } from './constants.js'
@@ -14,12 +14,24 @@ bot.use(session())
 
 bot.command('new', async (context) => {
 	context.session = INITIAL_SESSION
-	await context.reply('Жду вашего голосового или текстового сообщения')
+	await context.reply(code('Жду вашего голосового или текстового сообщения'))
 })
 
 bot.command('start', async (context) => {
 	context.session = INITIAL_SESSION
-	await context.reply('Жду вашего голосового или текстового сообщения')
+	await context.reply(
+		code(
+			'Привет! Я - Телеграм бот со встроенным чатом GPT. Я умею распознавать текст и речь, попробуй!',
+		),
+		Markup.keyboard([['Забудь все']])
+			.oneTime()
+			.resize(),
+	)
+})
+
+bot.hears('Забудь все', async (context) => {
+	context.session = INITIAL_SESSION
+	await context.reply(code('Пытаюсь забыть все, что между нами было...'))
 })
 
 bot.on(message('voice'), async (context) => {
@@ -38,6 +50,9 @@ bot.on(message('voice'), async (context) => {
 
 		await context.reply(code(`Ваш запрос: ${text}`))
 		await context.reply(code(`Думаю... Дайте мне пару секунд`))
+		await context.replyWithSticker(
+			'CAACAgIAAxkBAAIBNmRJQ4S2QWtXzoXfJPCUJo1TvCHJAAJEAgACNnYgDrLT0ZqwLk_nLwQ',
+		)
 
 		context.session.messages.push({
 			role: CHAT_GPT_ROLES.USER,
@@ -54,6 +69,7 @@ bot.on(message('voice'), async (context) => {
 		await context.reply(responseFromGPT.content)
 	} catch (error) {
 		console.log('Error while replying on message', error.message)
+		await context.reply(code(`Произошла ошибка: ${error.message}`))
 	}
 })
 
@@ -62,6 +78,9 @@ bot.on(message('text'), async (context) => {
 
 	try {
 		await context.reply(code(`Думаю... Дайте мне пару секунд`))
+		await context.replyWithSticker(
+			'CAACAgIAAxkBAAIBNmRJQ4S2QWtXzoXfJPCUJo1TvCHJAAJEAgACNnYgDrLT0ZqwLk_nLwQ',
+		)
 
 		context.session.messages.push({
 			role: CHAT_GPT_ROLES.USER,
@@ -78,6 +97,7 @@ bot.on(message('text'), async (context) => {
 		await context.reply(responseFromGPT.content)
 	} catch (error) {
 		console.log('Error while replying on message', error.message)
+		await context.reply(code(`Произошла ошибка: ${error.message}`))
 	}
 })
 
